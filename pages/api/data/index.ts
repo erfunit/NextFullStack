@@ -64,6 +64,14 @@ export default async function handler(
       console.log(err);
       res.status(500).json({ status: "failed", error: "error deleting user" });
     }
+  } else if (req.method === "PUT") {
+    try {
+      await User.updateOne({ _id: req.body._id }, { name: req.body.name });
+      res.status(200).json({ status: "OK", message: "User updated!" });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ status: "failed", error: "error updating user" });
+    }
   } else {
     res.status(404).json({ error: "Method not allowed!" });
   }
