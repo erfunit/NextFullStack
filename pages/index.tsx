@@ -123,7 +123,9 @@ const Page = () => {
         {users?.map((item) => {
           return (
             <p
-              onClick={() => onEditUser(item._id)}
+              onClick={() => {
+                setEditingItem(item._id);
+              }}
               className="p-2 rounded bg-gray-100 flex justify-between"
               key={item._id}
             >
