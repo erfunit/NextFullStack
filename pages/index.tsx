@@ -53,7 +53,7 @@ const Page = () => {
         return res.json();
       })
       .then((data) => {
-        toast(data.message);
+        toast.success(data.message);
       });
 
     fetchData();
@@ -74,6 +74,7 @@ const Page = () => {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          placeholder="User name..."
         />
         <button className="bg-blue-500 text-white p-2 rounded">send</button>
       </form>
