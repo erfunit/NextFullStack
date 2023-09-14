@@ -42,13 +42,11 @@ const Page = () => {
     if (data.error) {
       toast.error(data.error);
     } else {
+      reset();
       toast.success(data.message);
     }
 
     fetchData();
-
-    // setName(() => "");
-    reset();
   };
 
   const onDeleteItem = (_id: string) => {
