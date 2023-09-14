@@ -23,7 +23,9 @@ export default async function handler(
     }
 
     try {
-      const user = await User.findOne({ name });
+      const user = await User.findOne({
+        name: { $regex: new RegExp("^" + name + "$", "i") },
+      });
 
       if (user) {
         res
@@ -46,7 +48,23 @@ export default async function handler(
         .json({ status: "failed", error: "Failed in create data!" });
       return;
     }
+  } else if (req.method === "GET") {
+    try {
+      const data = await User.find();
+      res.status(200).json({ status: "OK", data });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ status: "failed", error: "error fetching users" });
+    }
+  } else if (req.method === "DELETE") {
+    await User.deleteOne({ _id: req.body._id });
+    res.status(200).json({ status: "OK", message: "User deleted" });
+    try {
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ status: "failed", error: "error deleting user" });
+    }
   } else {
-    res.status(400).json({ error: "Method not allowed!" });
+    res.status(404).json({ error: "Method not allowed!" });
   }
 }
