@@ -2,6 +2,7 @@ import fetchUsers from "@/utils/fetchUsers";
 import React, { FormEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
+import { FieldValues, useForm } from "react-hook-form";
 import { LiaTimesSolid } from "react-icons/lia";
 
 interface IUser {
@@ -11,7 +12,13 @@ interface IUser {
 }
 
 const Page = () => {
-  const [name, setName] = useState<string>("");
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm();
+  // const [name, setName] = useState<string>("");
   const [users, setUsers] = useState<Array<IUser> | null>(null);
   const [editingItem, setEditingItem] = useState<string>("");
 
@@ -20,8 +27,9 @@ const Page = () => {
     setUsers(res.data.reverse());
   };
 
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (formData: FieldValues) => {
+    // e.preventDefault();
+    const { name } = formData;
     const res = await fetch("/api/data", {
       method: "POST",
       body: JSON.stringify({ name }),
@@ -39,7 +47,8 @@ const Page = () => {
 
     fetchData();
 
-    setName(() => "");
+    // setName(() => "");
+    reset();
   };
 
   const onDeleteItem = (_id: string) => {
@@ -93,15 +102,35 @@ const Page = () => {
       <h1 className="text-2xl font-semibold my-3">
         API AND DATABASE IN NEXT.js
       </h1>
-      <form onSubmit={onSubmit} className="flex gap-2 mb-3">
-        <input
-          className="bg-slate-100 p-2 rounded"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="User name..."
-        />
-        <button className="bg-blue-500 text-white p-2 rounded">send</button>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex gap-2 mb-3 flex-col"
+      >
+        <div className="flex gap-2">
+          <input
+            className="bg-slate-100 p-2 rounded"
+            type="text"
+            {...register("name", {
+              required: "Name is required!",
+              minLength: {
+                value: 3,
+                message: "Name must be more than 3 characters",
+              },
+            })}
+            placeholder="User name..."
+          />
+          <button
+            disabled={isSubmitting}
+            className="bg-blue-500 disabled:bg-gray-400 text-white p-2 rounded"
+          >
+            send
+          </button>
+        </div>
+        {errors.name && (
+          <span className="text-red-500">
+            {errors.name.message?.toString()}
+          </span>
+        )}
       </form>
       <div className="flex gap-2 flex-col">
         {users?.map((item) => {
