@@ -5,11 +5,31 @@ import toast from "react-hot-toast";
 import { FieldValues, useForm } from "react-hook-form";
 import { LiaTimesSolid } from "react-icons/lia";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import z, { TypeOf } from "zod";
+
 interface IUser {
   _id: string;
   name: string;
   createdAt: Date;
 }
+
+const formSchema = z.object({
+  name: z.string().min(3, "Name must be more than 3 characters"),
+});
+
+type TFromSchema = z.infer<typeof formSchema>;
+
+type ReqMethod = "GET" | "PUT" | "POST" | "DELETE";
+
+const makeRequest = async (method: ReqMethod, body: object) => {
+  const response = await fetch("/api/data", {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return response.json();
+};
 
 const Page = () => {
   const {
@@ -17,7 +37,9 @@ const Page = () => {
     register,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm();
+  } = useForm<TFromSchema>({
+    resolver: zodResolver(formSchema),
+  });
   // const [name, setName] = useState<string>("");
   const [users, setUsers] = useState<Array<IUser> | null>(null);
   const [editingItem, setEditingItem] = useState<string>("");
@@ -27,72 +49,39 @@ const Page = () => {
     setUsers(res.data.reverse());
   };
 
+  // CHANGES:
   const onSubmit = async (formData: FieldValues) => {
-    // e.preventDefault();
-    const { name } = formData;
-    const res = await fetch("/api/data", {
-      method: "POST",
-      body: JSON.stringify({ name }),
-      headers: { "Content-Type": "application/json" },
-    });
+    const data = await makeRequest("POST", { name: formData.name });
 
-    const data = await res.json();
-
-    console.log(data.data);
     if (data.error) {
       toast.error(data.error);
     } else {
       reset();
+      setUsers((prevUsers) => [data.data, ...prevUsers!]);
       toast.success(data.message);
     }
-
-    fetchData();
   };
 
-  const onDeleteItem = (_id: string) => {
-    fetch("/api/data", {
-      method: "DELETE",
-      body: JSON.stringify({ _id }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => {
-        return res.json();
-      })
-      .then((data) => {
-        toast.success(data.message);
-      });
+  const onDeleteItem = async (_id: string) => {
+    const data = await makeRequest("DELETE", { _id });
+    toast.success(data.message);
 
-    fetchData();
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const onEditUser = (_id: string) => {
-    console.log(_id);
-    setEditingItem(_id);
+    setUsers((prevUsers) => prevUsers!.filter((user) => user._id !== _id));
   };
 
   const onEditComplete = async (_id: string, newName: string) => {
-    const res = await fetch("/api/data", {
-      method: "PUT",
-      body: JSON.stringify({ _id, name: newName }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const data = await makeRequest("PUT", { _id, name: newName });
 
-    const data = await res.json();
     if (data.error) {
       toast.error(data.error);
     } else {
+      setUsers((prevUsers) => {
+        return prevUsers!.map((user) =>
+          user._id === _id ? { ...user, name: newName } : user
+        );
+      });
       toast.success(data.message);
     }
-
-    fetchData();
   };
 
   return (
