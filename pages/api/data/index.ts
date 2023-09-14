@@ -12,7 +12,7 @@ export default async function handler(
     console.log(err);
     res
       .status(500)
-      .json({ status: "failed", message: "Internal server error!" });
+      .json({ status: "failed", error: "Internal server error!!" });
     return;
   }
   if (req.method === "POST") {
@@ -22,13 +22,30 @@ export default async function handler(
       return;
     }
 
-    await User.create({
-      name,
-    });
-    res
-      .status(201)
-      .json({ status: "success", message: "Data created", data: { name } });
-    console.log(name);
+    try {
+      const user = await User.findOne({ name });
+
+      if (user) {
+        res
+          .status(422)
+          .json({ status: "failed", error: "user already exists" });
+        return;
+      }
+
+      await User.create({
+        name,
+      });
+      res
+        .status(201)
+        .json({ status: "success", message: "Data created", data: { name } });
+      console.log(name);
+    } catch (err) {
+      console.log(err);
+      res
+        .status(500)
+        .json({ status: "failed", error: "Failed in create data!" });
+      return;
+    }
   } else {
     res.status(400).json({ error: "Method not allowed!" });
   }
