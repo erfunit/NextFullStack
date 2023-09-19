@@ -1,12 +1,12 @@
 import fetchUsers from "@/utils/fetchUsers";
-import React, { FormEvent, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import { FieldValues, useForm } from "react-hook-form";
 import { LiaTimesSolid } from "react-icons/lia";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import z, { TypeOf } from "zod";
+import z from "zod";
 
 interface IUser {
   _id: string;
@@ -27,6 +27,7 @@ const makeRequest = async (method: ReqMethod, body: object) => {
     method,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    cache: "no-store",
   });
   return response.json();
 };
@@ -41,13 +42,17 @@ const Page = () => {
     resolver: zodResolver(formSchema),
   });
   // const [name, setName] = useState<string>("");
-  const [users, setUsers] = useState<Array<IUser> | null>(null);
+  const [users, setUsers] = useState<Array<IUser>>([]);
   const [editingItem, setEditingItem] = useState<string>("");
 
   const fetchData = async () => {
     const res = await fetchUsers();
     setUsers(res.data.reverse());
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // CHANGES:
   const onSubmit = async (formData: FieldValues) => {

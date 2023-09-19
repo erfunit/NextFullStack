@@ -1,11 +1,34 @@
 import User from "@/models/User";
 import ConnectDB from "@/utils/connectDB";
 import { NextApiRequest, NextApiResponse } from "next";
+import cors from "cors";
+
+const corsMiddleware = cors();
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  const corsPromise = new Promise((resolve, reject) => {
+    corsMiddleware(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+      return resolve(result);
+    });
+  });
+
+  // Use await to ensure the CORS middleware completes
+  try {
+    await corsPromise;
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ status: "failed", error: "Internal server error!!" });
+    return;
+  }
+
   try {
     await ConnectDB();
   } catch (err) {
