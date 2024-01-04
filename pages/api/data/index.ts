@@ -74,7 +74,7 @@ export default async function handler(
   } else if (req.method === "GET") {
     try {
       const data = await User.find();
-      res.status(200).json({ status: "OK", data });
+      res.status(422).json({ status: "OK", data });
     } catch (err) {
       console.log(err);
       res.status(500).json({ status: "failed", error: "error fetching users" });
